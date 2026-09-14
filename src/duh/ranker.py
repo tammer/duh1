@@ -4,7 +4,7 @@ from duh.models import HudCard, TermCandidate
 
 
 class Ranker:
-    """Call-scoped dedupe, confidence floor, and max visible cards."""
+    """Call-scoped dedupe, confidence floor, and recency-capped visible cards."""
 
     def __init__(
         self,
@@ -49,13 +49,9 @@ class Ranker:
 
         self._seen.add(candidate.normalized)
         self._visible.append(card)
-        self._visible.sort(key=lambda c: c.confidence, reverse=True)
+        # Recency: keep the newest cards; older ones scroll off.
         if len(self._visible) > self.max_visible:
-            # Drop lowest confidence among currently visible.
-            self._visible = self._visible[: self.max_visible]
-            # If the new card was dropped, do not report it as shown.
-            if card not in self._visible:
-                return None
+            self._visible = self._visible[-self.max_visible :]
         return card
 
     def reset(self) -> None:

@@ -15,6 +15,10 @@
     "kind": "jargon",
     "blurb": "Futures market state where later-dated contracts price above nearer ones."
   },
+  "backwardation": {
+    "kind": "jargon",
+    "blurb": "Futures market state where nearer contracts price above later-dated ones."
+  },
   "stripe": {
     "kind": "company",
     "blurb": "Payments company providing APIs for online charges and billing."
