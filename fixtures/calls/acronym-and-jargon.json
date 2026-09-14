@@ -17,11 +17,11 @@
       "id": "e3",
       "t_ms": 8000,
       "is_final": true,
-      "text": "Oil books are in contango through the winter."
+      "text": "Oil books are in contango through the winter. Market is in backwardation."
     }
   ],
   "expect": {
-    "terms": ["ARR", "SOC2", "contango"],
+    "terms": ["ARR", "SOC2", "contango", "backwardation"],
     "must_not_show": ["Our", "Security", "Oil"]
   }
 }

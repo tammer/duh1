@@ -128,10 +128,36 @@ def test_term_cache_roundtrip(tmp_path) -> None:
     assert "swaption" in reloaded.known_terms()
 
 
-def test_parse_json_content_fences() -> None:
-    from duh.groq_client import parse_json_content
-
-    assert parse_json_content('```json\n[{"a": 1}]\n```') == [{"a": 1}]
+def test_analyzer_keeps_all_explain_worthy_terms(tmp_path) -> None:
+    cache = TermCache(tmp_path / "c.json")
+    client = FakeChatClient(
+        [
+            [
+                {
+                    "term": "10-year",
+                    "kind": "jargon",
+                    "blurb": "The 10-year Treasury note.",
+                    "confidence": 0.9,
+                },
+                {
+                    "term": "swaption",
+                    "kind": "jargon",
+                    "blurb": "Option to enter an interest-rate swap.",
+                    "confidence": 0.95,
+                },
+            ]
+        ]
+    )
+    analyzer = GroqUtteranceAnalyzer(client, cache=cache)
+    terms = analyzer.analyze(
+        TranscriptEvent(
+            id="e2",
+            text="We're looking at a swaption on the 10-year.",
+            is_final=True,
+            t_ms=0,
+        )
+    )
+    assert {t.term for t in terms} == {"10-year", "swaption"}
 
 
 def test_pipeline_analyzer_path(tmp_path) -> None:

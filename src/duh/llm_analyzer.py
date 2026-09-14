@@ -14,7 +14,11 @@ You are a meeting HUD assistant. Given one transcript utterance, return terms a 
 professional listener may need defined right now.
 
 Rules:
-- Include companies, products, jargon, and non-obvious acronyms.
+- Include companies, products, technical jargon (e.g. swaption, contango), \
+non-obvious acronyms (e.g. EBITDA, SOC2), and market terms listeners may not know \
+(e.g. "10-year" as the Treasury tenor).
+- If several explain-worthy terms appear in one utterance, return ALL of them \
+(e.g. for "a swaption on the 10-year", return both swaption and 10-year).
 - Skip filler and common words (okay, slide, tomorrow, thanks, next, plan, etc.).
 - Each blurb must be essentials only, at most 280 characters.
 - If nothing is worth explaining, return an empty JSON array [].
@@ -65,7 +69,7 @@ class GroqUtteranceAnalyzer:
         resolved: list[AnalyzedTerm] = []
         to_store: list[tuple[str, TermKind, str]] = []
         for item in terms:
-            normalized = item.term.lower()
+            normalized = item.term.lower().strip()
             if normalized in self._session_known:
                 continue
 
