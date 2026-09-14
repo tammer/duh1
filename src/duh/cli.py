@@ -6,12 +6,16 @@ import sys
 from pathlib import Path
 
 from duh.adapters.fixture_source import FixtureReplaySource
+from duh.adapters.plain_source import PlainTextStreamSource
 from duh.adapters.terminal_sink import TerminalHudSink
 from duh.cache import TermCache
 from duh.enricher import CachingEnricher, MockEnricher
 from duh.groq_client import GroqClient, get_groq_api_key
 from duh.llm_analyzer import GroqUtteranceAnalyzer
 from duh.pipeline import CallPipeline
+from duh.ports import TranscriptSource
+
+_PLAIN_SUFFIXES = {".txt", ".md"}
 
 
 def _load_dotenv(path: Path | None = None) -> None:
@@ -34,22 +38,44 @@ def _default_backend() -> str:
     return "groq" if get_groq_api_key() else "mock"
 
 
+def _open_source(
+    path: Path,
+    *,
+    speed: float,
+    words: int,
+) -> TranscriptSource:
+    suffix = path.suffix.lower()
+    if suffix == ".json":
+        return FixtureReplaySource.from_path(path, speed=speed)
+    if suffix in _PLAIN_SUFFIXES:
+        return PlainTextStreamSource.from_path(path, words=words, speed=speed)
+    raise ValueError(
+        f"unsupported transcript format {suffix!r}; use .json, .txt, or .md"
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     _load_dotenv()
     parser = argparse.ArgumentParser(
         prog="duh-replay",
-        description="Replay a call fixture through the meeting HUD pipeline.",
+        description="Replay a call transcript through the meeting HUD pipeline.",
     )
     parser.add_argument(
         "fixture",
         type=Path,
-        help="Path to a call fixture JSON file",
+        help="Path to a JSON fixture or plain-text transcript (.txt/.md)",
     )
     parser.add_argument(
         "--speed",
         type=float,
         default=0.0,
         help="Playback speed (0 = as fast as possible, 1 = realtime, 4 = 4x)",
+    )
+    parser.add_argument(
+        "--words",
+        type=int,
+        default=8,
+        help="Words per partial drip for plain-text transcripts (default: 8)",
     )
     parser.add_argument(
         "--backend",
@@ -75,8 +101,13 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: fixture not found: {args.fixture}", file=sys.stderr)
         return 1
 
+    try:
+        source = _open_source(args.fixture, speed=args.speed, words=args.words)
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+
     backend = args.backend or _default_backend()
-    source = FixtureReplaySource.from_path(args.fixture, speed=args.speed)
     sink = TerminalHudSink()
 
     if backend == "groq":
