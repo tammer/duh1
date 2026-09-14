@@ -2,7 +2,7 @@
 
 Meeting HUD core: stream transcript events, detect terms, enrich with short blurbs, and show cards.
 
-This first cut is **fixture-first** — no audio capture or live STT. Replay JSON call fixtures through the pipeline to iterate on detection and ranking.
+Fixture-first — no audio capture or live STT yet. Replay JSON call fixtures through the pipeline.
 
 ## Setup
 
@@ -14,12 +14,26 @@ pip install -e ".[dev]"
 
 ## Replay a fixture
 
+**Mock backend** (closed lexicon in `fixtures/enrichments.json` — used by pytest goldens):
+
 ```bash
-duh-replay fixtures/calls/finance-jargon-basic.json --speed 0
-duh-replay fixtures/calls/finance-jargon-basic.json --speed 4
+duh-replay fixtures/calls/finance-jargon-basic.json --backend mock --speed 0
 ```
 
+**Groq backend** (open-world; no need to predefine every term):
+
+```bash
+# Edit .env in the repo root:
+#   GROQ_API_KEY=your_key_here
+#   GROQ_MODEL=openai/gpt-oss-120b
+duh-replay fixtures/calls/acronym-and-jargon.json --backend groq --speed 0
+```
+
+`duh-replay` loads `.env` from the current directory automatically. If `GROQ_API_KEY` is set, `--backend` defaults to `groq`; otherwise `mock`.
+
 `--speed 0` runs as fast as possible. `--speed 1` is realtime relative to fixture timestamps; `4` is 4×.
+
+Term blurbs from Groq are cached under `.duh/cache/enrichments.json` (gitignored).
 
 ## Tests
 
@@ -27,11 +41,11 @@ duh-replay fixtures/calls/finance-jargon-basic.json --speed 4
 pytest
 ```
 
-Golden fixtures under `fixtures/calls/` assert which terms must appear and which must not.
+Golden fixtures under `fixtures/calls/` run on the **mock** backend and stay deterministic. Groq paths are covered with a fake client (no network in CI).
 
 ## Layout
 
-- `src/duh/` — models, detector, enricher, ranker, pipeline
+- `src/duh/` — models, detector, enricher, LLM analyzer, ranker, pipeline
 - `src/duh/adapters/` — fixture replay, terminal + in-memory HUD sinks
-- `fixtures/enrichments.json` — canned term blurbs for `MockEnricher`
+- `fixtures/enrichments.json` — canned blurbs for `MockEnricher`
 - `fixtures/calls/` — timed transcript goldens
