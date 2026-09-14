@@ -1,0 +1,21 @@
+{
+  "name": "company-mentions",
+  "events": [
+    {
+      "id": "e1",
+      "t_ms": 0,
+      "is_final": true,
+      "text": "Stripe handles checkout for the new storefront."
+    },
+    {
+      "id": "e2",
+      "t_ms": 5000,
+      "is_final": true,
+      "text": "We may list on Nasdaq next year if the board agrees."
+    }
+  ],
+  "expect": {
+    "terms": ["Stripe", "Nasdaq"],
+    "must_not_show": ["handles", "storefront", "board"]
+  }
+}

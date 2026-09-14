@@ -1,0 +1,51 @@
+{
+  "name": "finance-jargon-basic",
+  "events": [
+    {
+      "id": "e1",
+      "t_ms": 0,
+      "is_final": true,
+      "text": "Okay, next slide."
+    },
+    {
+      "id": "e2",
+      "t_ms": 2500,
+      "is_final": true,
+      "text": "We're looking at a swaption on the 10-year."
+    },
+    {
+      "id": "e3",
+      "t_ms": 7000,
+      "is_final": true,
+      "text": "Microsoft is the counterparty on the trade."
+    },
+    {
+      "id": "e4",
+      "t_ms": 11000,
+      "is_final": true,
+      "text": "They want protection on EBITDA volatility into FY27."
+    },
+    {
+      "id": "e5",
+      "t_ms": 16000,
+      "is_final": true,
+      "text": "Again, Microsoft came up in the IC memo last week."
+    },
+    {
+      "id": "e6",
+      "t_ms": 20000,
+      "is_final": false,
+      "text": "swap"
+    },
+    {
+      "id": "e7",
+      "t_ms": 20500,
+      "is_final": true,
+      "text": "The swaption expires next quarter."
+    }
+  ],
+  "expect": {
+    "terms": ["swaption", "Microsoft", "EBITDA"],
+    "must_not_show": ["Okay", "looking", "year", "trade", "week", "swap"]
+  }
+}

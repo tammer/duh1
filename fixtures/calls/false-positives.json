@@ -1,0 +1,27 @@
+{
+  "name": "false-positives",
+  "events": [
+    {
+      "id": "e1",
+      "t_ms": 0,
+      "is_final": true,
+      "text": "Okay, thanks everyone. Next slide please."
+    },
+    {
+      "id": "e2",
+      "t_ms": 3000,
+      "is_final": true,
+      "text": "We will circle back tomorrow on the plan."
+    },
+    {
+      "id": "e3",
+      "t_ms": 6000,
+      "is_final": false,
+      "text": "Micros"
+    }
+  ],
+  "expect": {
+    "terms": [],
+    "must_not_show": ["Okay", "thanks", "Next", "We", "Micros", "plan"]
+  }
+}

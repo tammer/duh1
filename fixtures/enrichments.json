@@ -1,0 +1,34 @@
+{
+  "swaption": {
+    "kind": "jargon",
+    "blurb": "Option giving the holder the right to enter an interest-rate swap."
+  },
+  "microsoft": {
+    "kind": "company",
+    "blurb": "Public software company (Word, Excel, Azure); CEO Satya Nadella."
+  },
+  "ebitda": {
+    "kind": "acronym",
+    "blurb": "Earnings before interest, taxes, depreciation, and amortization."
+  },
+  "contango": {
+    "kind": "jargon",
+    "blurb": "Futures market state where later-dated contracts price above nearer ones."
+  },
+  "stripe": {
+    "kind": "company",
+    "blurb": "Payments company providing APIs for online charges and billing."
+  },
+  "soc2": {
+    "kind": "acronym",
+    "blurb": "Security compliance report on controls for service organizations."
+  },
+  "arr": {
+    "kind": "acronym",
+    "blurb": "Annual recurring revenue — normalized yearly subscription revenue."
+  },
+  "nasdaq": {
+    "kind": "company",
+    "blurb": "U.S. stock exchange known for technology listings."
+  }
+}

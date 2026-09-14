@@ -1,0 +1,27 @@
+{
+  "name": "dedupe-remention",
+  "events": [
+    {
+      "id": "e1",
+      "t_ms": 0,
+      "is_final": true,
+      "text": "Microsoft published new Azure pricing."
+    },
+    {
+      "id": "e2",
+      "t_ms": 5000,
+      "is_final": true,
+      "text": "I agree with Microsoft on the bundling."
+    },
+    {
+      "id": "e3",
+      "t_ms": 10000,
+      "is_final": true,
+      "text": "Microsoft again, just to close the loop."
+    }
+  ],
+  "expect": {
+    "terms": ["Microsoft"],
+    "must_not_show": []
+  }
+}

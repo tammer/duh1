@@ -1,0 +1,27 @@
+{
+  "name": "acronym-and-jargon",
+  "events": [
+    {
+      "id": "e1",
+      "t_ms": 0,
+      "is_final": true,
+      "text": "Our ARR crossed twenty million after the enterprise push."
+    },
+    {
+      "id": "e2",
+      "t_ms": 4000,
+      "is_final": true,
+      "text": "Security asked for a fresh SOC2 before the renewal."
+    },
+    {
+      "id": "e3",
+      "t_ms": 8000,
+      "is_final": true,
+      "text": "Oil books are in contango through the winter."
+    }
+  ],
+  "expect": {
+    "terms": ["ARR", "SOC2", "contango"],
+    "must_not_show": ["Our", "Security", "Oil"]
+  }
+}
