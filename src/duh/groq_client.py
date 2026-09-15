@@ -6,6 +6,7 @@ import re
 from typing import Any, Protocol
 
 DEFAULT_GROQ_MODEL = "openai/gpt-oss-120b"
+DEFAULT_GROQ_STT_MODEL = "whisper-large-v3-turbo"
 
 _JSON_FENCE_RE = re.compile(r"```(?:json)?\s*(.*?)```", re.DOTALL | re.IGNORECASE)
 
@@ -22,6 +23,13 @@ def get_groq_api_key() -> str | None:
 
 def get_groq_model() -> str:
     return os.environ.get("GROQ_MODEL", DEFAULT_GROQ_MODEL).strip() or DEFAULT_GROQ_MODEL
+
+
+def get_groq_stt_model() -> str:
+    return (
+        os.environ.get("GROQ_STT_MODEL", DEFAULT_GROQ_STT_MODEL).strip()
+        or DEFAULT_GROQ_STT_MODEL
+    )
 
 
 def parse_json_content(content: str) -> Any:
@@ -47,10 +55,20 @@ class GroqClient:
         if not key:
             raise ValueError("GROQ_API_KEY is required for the groq backend")
         self.model = model or get_groq_model()
+        self.stt_model = get_groq_stt_model()
         self.temperature = temperature
         from groq import Groq
 
         self._client = Groq(api_key=key)
+
+    def transcribe_wav(self, wav_bytes: bytes) -> str:
+        """Transcribe a mono WAV blob via Groq Whisper. Returns stripped text."""
+        response = self._client.audio.transcriptions.create(
+            file=("chunk.wav", wav_bytes, "audio/wav"),
+            model=self.stt_model,
+            language="en",
+        )
+        return (getattr(response, "text", None) or "").strip()
 
     def chat_json(self, system: str, user: str) -> Any:
         response = self._client.chat.completions.create(

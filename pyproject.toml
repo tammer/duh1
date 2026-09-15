@@ -18,9 +18,14 @@ dependencies = [
 dev = [
     "pytest>=8.0",
 ]
+live = [
+    "sounddevice>=0.5",
+    "numpy>=2.0",
+]
 
 [project.scripts]
 duh-replay = "duh.cli:main"
+duh-live = "duh.live_cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/duh"]
