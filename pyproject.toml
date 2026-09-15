@@ -26,6 +26,7 @@ live = [
 [project.scripts]
 duh-replay = "duh.cli:main"
 duh-live = "duh.live_cli:main"
+duh-worker = "duh.worker_cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/duh"]

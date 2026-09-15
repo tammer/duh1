@@ -66,6 +66,23 @@ Or set `DUH_CAPTURE_DEVICE` in `.env`. Optional `--save-transcript out.txt` writ
 
 **YouTube recipe:** play a jargon-heavy talk (skip ads), run `duh-live`, and watch the terminal HUD. Cards lag the video by about 1–3 seconds. Do not commit recordings; saved transcripts are text only.
 
+### JSON worker + macOS overlay
+
+`duh-worker` is the same capture pipeline with **JSONL on stdout** (for the native HUD). Logs stay on stderr.
+
+```bash
+pip install -e ".[dev,live]"
+duh-worker --device "BlackHole 2ch"
+```
+
+Open the Swift overlay:
+
+```bash
+open apps/macos/Duh.xcodeproj
+```
+
+Run the **Duh** scheme in Xcode. The floating panel starts/stops `duh-worker` and renders cards. See [apps/macos/README.md](apps/macos/README.md) for Multi-Output setup and worker path details.
+
 ## Tests
 
 ```bash
@@ -76,8 +93,9 @@ Golden fixtures under `fixtures/calls/` run on the **mock** backend and stay det
 
 ## Layout
 
-- `src/duh/` — models, detector, enricher, LLM analyzer, ranker, pipeline, live CLI
-- `src/duh/adapters/` — fixture replay, plain-text stream, loopback capture, terminal + in-memory HUD sinks
+- `src/duh/` — models, detector, enricher, LLM analyzer, ranker, pipeline, live/worker CLIs
+- `src/duh/adapters/` — fixture replay, plain-text stream, loopback capture, terminal / JSON / in-memory HUD sinks
+- `apps/macos/` — SwiftUI floating overlay that supervises `duh-worker`
 - `fixtures/enrichments.json` — canned blurbs for `MockEnricher`
 - `fixtures/calls/` — timed transcript goldens
 - `fixtures/calls/raw/` — plain-text call dumps for streaming replay
