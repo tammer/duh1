@@ -66,6 +66,25 @@ Or set `DUH_CAPTURE_DEVICE` in `.env`. Optional `--save-transcript out.txt` writ
 
 **YouTube recipe:** play a jargon-heavy talk (skip ads), run `duh-live`, and watch the terminal HUD. Cards lag the video by about 1–3 seconds. Do not commit recordings; saved transcripts are text only.
 
+### Latency timing
+
+Live capture logs stage timings to stderr and appends `.duh/timing.log` (gitignored). Look for `[duh.timing]` lines:
+
+- `chunk_ready` — speech chunk flushed (`audio_ms` = buffered length; silence flush adds wait before this)
+- `stt` — Groq Whisper (`stt_ms`)
+- `analyze` — Groq term/blurb LLM (`analyze_ms`)
+- `card` / `pipeline` — card emit and post-transcript pipeline time
+
+```bash
+# terminal
+duh-live --device "BlackHole 2ch" 2>&1 | grep duh.timing
+
+# or while using the macOS overlay
+tail -f .duh/timing.log
+```
+
+Set `DUH_TIMING=0` to disable. Override the log file with `DUH_TIMING_LOG=/tmp/duh-timing.log`.
+
 ### JSON worker + macOS overlay
 
 `duh-worker` is the same capture pipeline with **JSONL on stdout** (for the native HUD). Logs stay on stderr.

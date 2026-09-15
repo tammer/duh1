@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import io
 import os
 import queue
 import re
+import wave
 from collections.abc import Callable, Iterator, Sequence
 from typing import Any
 
@@ -10,6 +12,7 @@ from duh.audio_chunker import SAMPLE_RATE, SpeechChunker
 from duh.clock import SystemClock
 from duh.models import TranscriptEvent
 from duh.ports import Clock
+from duh.timing import Stopwatch, log_timing
 
 TranscribeFn = Callable[[bytes], str]
 
@@ -157,11 +160,26 @@ class LiveLoopbackSource:
     ) -> TranscriptEvent | None:
         if not wav:
             return None
+        eid = f"e{event_id}"
+        audio_ms = _wav_duration_ms(wav)
+        # Chunk is ready only after silence flush / max-speech; audio_ms is
+        # buffered speech length (includes trailing silence samples in buffer).
+        log_timing("chunk_ready", event_id=eid, audio_ms=audio_ms, wav_bytes=len(wav))
+        sw = Stopwatch()
         text = (self.transcribe(wav) or "").strip()
+        stt_ms = sw.ms()
         if not text:
+            log_timing("stt", event_id=eid, audio_ms=audio_ms, stt_ms=stt_ms, empty=1)
             return None
+        log_timing(
+            "stt",
+            event_id=eid,
+            audio_ms=audio_ms,
+            stt_ms=stt_ms,
+            chars=len(text),
+        )
         return TranscriptEvent(
-            id=f"e{event_id}",
+            id=eid,
             text=text,
             is_final=True,
             t_ms=max(0, self.clock.now_ms() - start_ms),
@@ -199,6 +217,15 @@ class LiveLoopbackSource:
                 except queue.Empty:
                     continue
                 yield as_mono_floats(data)
+
+
+def _wav_duration_ms(wav: bytes) -> int:
+    try:
+        with wave.open(io.BytesIO(wav), "rb") as wf:
+            rate = wf.getframerate() or SAMPLE_RATE
+            return int(wf.getnframes() * 1000 / rate)
+    except wave.Error:
+        return 0
 
 
 __all__ = [

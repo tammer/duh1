@@ -57,7 +57,7 @@ def test_silence_stays_unflushed() -> None:
 
 def test_speech_plus_trailing_silence_emits_one_wav() -> None:
     chunker = SpeechChunker()
-    emitted = _push_all(chunker, _sine(0.6) + _silence(1.2))
+    emitted = _push_all(chunker, _sine(0.6) + _silence(0.5))
     assert len(emitted) == 1
     with wave.open(io.BytesIO(emitted[0]), "rb") as handle:
         assert handle.getnframes() > 0
@@ -65,9 +65,23 @@ def test_speech_plus_trailing_silence_emits_one_wav() -> None:
 
 def test_tiny_clip_is_discarded() -> None:
     chunker = SpeechChunker(min_speech_ms=400)
-    emitted = _push_all(chunker, _sine(0.2) + _silence(1.0))
+    emitted = _push_all(chunker, _sine(0.2) + _silence(0.5))
     assert emitted == []
     assert chunker.flush() is None
+
+
+def test_default_max_speech_force_flush() -> None:
+    """Defaults cap continuous speech so live HUD does not buffer ~8s."""
+    from duh.audio_chunker import MAX_SPEECH_MS, SILENCE_FLUSH_MS
+
+    assert SILENCE_FLUSH_MS == 400
+    assert MAX_SPEECH_MS == 2_500
+    chunker = SpeechChunker()
+    emitted = _push_all(chunker, _sine(3.0))
+    assert len(emitted) >= 1
+    with wave.open(io.BytesIO(emitted[0]), "rb") as handle:
+        # First force-flush should be around max_speech, not the full 3s.
+        assert handle.getnframes() <= int(2.6 * SAMPLE_RATE)
 
 
 def test_max_duration_force_flush() -> None:

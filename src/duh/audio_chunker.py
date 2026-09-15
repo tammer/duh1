@@ -8,8 +8,9 @@ from collections.abc import Sequence
 
 SAMPLE_RATE = 16_000
 ENERGY_THRESHOLD = 0.01
-SILENCE_FLUSH_MS = 1_000
-MAX_SPEECH_MS = 8_000
+# Prefer snappy live HUD latency over long utterances (was 1000 / 8000).
+SILENCE_FLUSH_MS = 400
+MAX_SPEECH_MS = 2_500
 MIN_SPEECH_MS = 400
 
 

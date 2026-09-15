@@ -8,6 +8,7 @@ from duh.llm_analyzer import GroqUtteranceAnalyzer
 from duh.models import TermCandidate, TranscriptEvent
 from duh.ports import Clock, Enricher, HudSink, TranscriptSource
 from duh.ranker import Ranker
+from duh.timing import Stopwatch, log_timing
 
 
 class CallPipeline:
@@ -35,14 +36,28 @@ class CallPipeline:
         self.on_event = on_event
 
     def handle_event(self, event: TranscriptEvent) -> None:
+        sw = Stopwatch()
         if self.on_event is not None:
             self.on_event(event)
 
+        cards_shown = 0
         if self.analyzer is not None:
-            self._handle_with_analyzer(event)
-            return
+            cards_shown = self._handle_with_analyzer(event)
+        else:
+            assert self.enricher is not None
+            cards_shown = self._handle_with_enricher(event)
 
+        log_timing(
+            "pipeline",
+            event_id=event.id,
+            pipeline_ms=sw.ms(),
+            cards=cards_shown,
+            source=event.source,
+        )
+
+    def _handle_with_enricher(self, event: TranscriptEvent) -> int:
         assert self.enricher is not None
+        cards_shown = 0
         for candidate in self.detector.detect(event):
             blurb = self.enricher.enrich(candidate.term, candidate.kind)
             if blurb is None:
@@ -54,9 +69,18 @@ class CallPipeline:
             )
             if card is not None:
                 self.sink.show(card)
+                cards_shown += 1
+                log_timing(
+                    "card",
+                    event_id=event.id,
+                    term=card.term,
+                    kind=card.kind,
+                )
+        return cards_shown
 
-    def _handle_with_analyzer(self, event: TranscriptEvent) -> None:
+    def _handle_with_analyzer(self, event: TranscriptEvent) -> int:
         assert self.analyzer is not None
+        cards_shown = 0
         for analyzed in self.analyzer.analyze(event):
             candidate = TermCandidate(
                 term=analyzed.term,
@@ -73,6 +97,14 @@ class CallPipeline:
             )
             if card is not None:
                 self.sink.show(card)
+                cards_shown += 1
+                log_timing(
+                    "card",
+                    event_id=event.id,
+                    term=card.term,
+                    kind=card.kind,
+                )
+        return cards_shown
 
     def run(self, source: TranscriptSource) -> None:
         for event in source.events():

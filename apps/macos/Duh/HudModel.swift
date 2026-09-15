@@ -13,12 +13,6 @@ struct HudCardItem: Identifiable, Equatable {
     let blurb: String
     let confidence: Double
     let shownAtMs: Int
-    let ttlMs: Int
-    let receivedAt: Date
-
-    var isExpired: Bool {
-        Date().timeIntervalSince(receivedAt) * 1000.0 >= Double(ttlMs)
-    }
 }
 
 @MainActor
@@ -32,7 +26,6 @@ final class HudModel: ObservableObject {
     @Published var errorText: String = ""
 
     private let worker = WorkerProcess()
-    private var expiryTimer: Timer?
 
     init() {
         let defaults = UserDefaults.standard
@@ -57,7 +50,6 @@ final class HudModel: ObservableObject {
                 }
             }
         }
-        startExpiryTimer()
     }
 
     static func defaultWorkerPath() -> String {
@@ -108,22 +100,17 @@ final class HudModel: ObservableObject {
             errorText = ""
         case let .transcript(_, text, _, _):
             latestTranscript = text
-        case let .card(term, kind, blurb, confidence, shownAtMs, ttlMs):
+        case let .card(term, kind, blurb, confidence, shownAtMs, _):
             let item = HudCardItem(
                 id: "\(term.lowercased())-\(shownAtMs)",
                 term: term,
                 kind: kind,
                 blurb: blurb,
                 confidence: confidence,
-                shownAtMs: shownAtMs,
-                ttlMs: ttlMs,
-                receivedAt: Date()
+                shownAtMs: shownAtMs
             )
             cards.removeAll { $0.term.caseInsensitiveCompare(term) == .orderedSame }
-            cards.append(item)
-            if cards.count > 3 {
-                cards = Array(cards.suffix(3))
-            }
+            cards.insert(item, at: 0)
         case let .error(message):
             errorText = message
             statusText = "Error"
@@ -133,20 +120,6 @@ final class HudModel: ObservableObject {
             break
         case .unknown:
             break
-        }
-    }
-
-    private func startExpiryTimer() {
-        expiryTimer?.invalidate()
-        expiryTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            Task { @MainActor in
-                guard let self else { return }
-                let before = self.cards.count
-                self.cards.removeAll(where: \.isExpired)
-                if self.cards.count != before {
-                    self.objectWillChange.send()
-                }
-            }
         }
     }
 }

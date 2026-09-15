@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, ValidationError
 from duh.cache import TermCache
 from duh.groq_client import ChatClient
 from duh.models import TermKind, TranscriptEvent
+from duh.timing import Stopwatch, log_timing
 
 SYSTEM_PROMPT = """\
 You are a meeting HUD assistant. Given one transcript utterance, return terms a \
@@ -63,11 +64,14 @@ class GroqUtteranceAnalyzer:
             "utterance": text,
             "already_known": already_known,
         }
+        sw = Stopwatch()
         raw = self.client.chat_json(SYSTEM_PROMPT, json.dumps(user_payload))
+        analyze_ms = sw.ms()
         terms = self._parse_terms(raw)
 
         resolved: list[AnalyzedTerm] = []
         to_store: list[tuple[str, TermKind, str]] = []
+        cache_hits = 0
         for item in terms:
             normalized = item.term.lower().strip()
             if normalized in self._session_known:
@@ -77,6 +81,7 @@ class GroqUtteranceAnalyzer:
             if cached and cached.get("blurb"):
                 kind = _coerce_kind(cached.get("kind"), item.kind)
                 blurb = cached["blurb"]
+                cache_hits += 1
             else:
                 kind = item.kind
                 blurb = item.blurb
@@ -93,6 +98,14 @@ class GroqUtteranceAnalyzer:
             self._session_known.add(normalized)
 
         self.cache.put_many(to_store)
+        log_timing(
+            "analyze",
+            event_id=event.id,
+            analyze_ms=analyze_ms,
+            terms=len(resolved),
+            cache_hits=cache_hits,
+            utterance_chars=len(text),
+        )
         return resolved
 
     @staticmethod

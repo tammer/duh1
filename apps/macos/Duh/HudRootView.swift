@@ -90,34 +90,52 @@ struct HudRootView: View {
                     Text("Cards will appear when jargon is detected.")
                         .font(.callout)
                         .foregroundStyle(.secondary)
+                    Spacer(minLength: 0)
                 } else {
-                    ForEach(model.cards) { card in
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack(alignment: .firstTextBaseline) {
-                                Text(card.term)
-                                    .font(.headline)
-                                Text(card.kind)
-                                    .font(.caption2)
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(Color.accentColor.opacity(0.15), in: Capsule())
+                    Color.clear
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .overlay(alignment: .topLeading) {
+                            VStack(alignment: .leading, spacing: 8) {
+                                ForEach(model.cards) { card in
+                                    HudCardView(card: card)
+                                        .transition(.move(edge: .top).combined(with: .opacity))
+                                }
                             }
-                            Text(card.blurb)
-                                .font(.callout)
-                                .foregroundStyle(.primary.opacity(0.9))
-                                .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .animation(.spring(response: 0.35, dampingFraction: 0.88), value: model.cards)
                         }
-                        .padding(10)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
-                    }
+                        .clipped()
                 }
             }
-
-            Spacer(minLength: 0)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .padding(16)
-        .frame(minWidth: 300, minHeight: 280)
+        .frame(minWidth: 300, maxWidth: .infinity, minHeight: 280, maxHeight: .infinity)
+    }
+}
+
+private struct HudCardView: View {
+    let card: HudCardItem
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(card.term)
+                    .font(.headline)
+                Text(card.kind)
+                    .font(.caption2)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color.accentColor.opacity(0.15), in: Capsule())
+            }
+            Text(card.blurb)
+                .font(.callout)
+                .foregroundStyle(.primary.opacity(0.9))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
     }
 }
 
